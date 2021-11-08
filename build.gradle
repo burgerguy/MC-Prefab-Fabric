@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.9-SNAPSHOT'
+	id 'fabric-loom' version '0.10-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -9,7 +9,7 @@ repositories {
 }
 
 loom {
-	accessWidenerPath = file("src/main/resources/prefab.accesswidener")
+	accessWidenerPath.set(file("src/main/resources/prefab.accesswidener"))
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
