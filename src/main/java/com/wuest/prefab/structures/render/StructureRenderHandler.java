@@ -49,7 +49,9 @@ public class StructureRenderHandler {
 
     private static int dimension;
     private static VertexBuffer vertexBuffer;
+    private static float[] primitivePositions;
     private static final RenderLayer renderLayer = PrefabRenderLayer.createRenderLayer();
+    private static final TranslucentBufferBuilderWrapper translucentBuilder = new TranslucentBufferBuilderWrapper(new BufferBuilder(32768), 100, 256);
 
     /**
      * Resets the structure to show in the world.
@@ -156,17 +158,16 @@ public class StructureRenderHandler {
 
     private static void buildVertexBuffer(Set<BuildBlock> blocks) {
         vertexBuffer = new VertexBuffer();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
-        StructureRenderHandler.buildBlockMesh(blocks, new MatrixStack(), bufferBuilder);
-        bufferBuilder.end();
-        vertexBuffer.upload(bufferBuilder);
+        translucentBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
+        StructureRenderHandler.buildBlockMesh(blocks, new MatrixStack(), translucentBuilder);
+        translucentBuilder.end();
+        vertexBuffer.upload(translucentBuilder.getInner());
+        translucentBuilder.clear();
     }
 
     private static void buildBlockMesh(Set<BuildBlock> blocks, MatrixStack matrixStack, VertexConsumer vertexConsumer) {
         MinecraftClient mc = MinecraftClient.getInstance();
         BlockRenderManager blockRenderManager = mc.getBlockRenderManager();
-        TranslucentVertexConsumer translucentConsumer = new TranslucentVertexConsumer(vertexConsumer, 100);
         PrefabRenderView renderView = currentStructure.asRenderView(currentConfiguration.houseFacing);
 
         for (BuildBlock block : blocks) {
@@ -351,33 +352,26 @@ public class StructureRenderHandler {
             // Based on direction, width and length may be need to be modified;
 
             switch (config.direction) {
-                case NORTH: {
+                case NORTH -> {
                     zLength = -zLength;
                     startingPosition = startingPosition.offset(config.direction.getOpposite());
-                    break;
                 }
-
-                case EAST: {
+                case EAST -> {
                     int tempWidth = xLength;
                     xLength = zLength;
                     zLength = tempWidth;
-                    break;
                 }
-
-                case SOUTH: {
+                case SOUTH -> {
                     xLength = -xLength;
                     startingPosition = startingPosition.offset(config.direction.rotateYCounterclockwise());
-                    break;
                 }
-
-                case WEST: {
+                case WEST -> {
                     int tempLength = zLength;
                     zLength = -xLength;
                     xLength = -tempLength;
 
                     startingPosition = startingPosition.offset(config.direction.getOpposite());
                     startingPosition = startingPosition.offset(config.direction.rotateYCounterclockwise());
-                    break;
                 }
             }
 
